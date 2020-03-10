@@ -1,4 +1,7 @@
-from Config import *
+import numpy as np
+import pickle
+import Config
+
 
 class Player:
     def __init__(self, name, exp_rate=0.3):
@@ -10,7 +13,7 @@ class Player:
         self.states_value = {}  # state -> value
 
     def getHash(self, board):
-        boardHash = str(board.reshape(BOARD_COLS * BOARD_ROWS))
+        boardHash = str(board.reshape(Config.BOARD_COLS * Config.BOARD_ROWS))
         return boardHash
 
     def chooseAction(self, positions, current_board, symbol):
@@ -47,8 +50,8 @@ class Player:
     def reset(self):
         self.states = []
 
-    def savePolicy(self):
-        fw = open('policy_' + str(self.name), 'wb')
+    def savePolicy(self,rounds):
+        fw = open('policies/policy_' + str(self.name)+'_'+str(rounds), 'wb')
         pickle.dump(self.states_value, fw)
         fw.close()
 

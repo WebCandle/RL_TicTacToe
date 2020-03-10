@@ -1,8 +1,10 @@
-from Config import *
+import numpy as np
+import pickle
+import Config
 
 class State:
     def __init__(self, p1, p2):
-        self.board = np.zeros((BOARD_ROWS, BOARD_COLS))
+        self.board = np.zeros((Config.BOARD_ROWS, Config.BOARD_COLS),dtype=int)
         self.p1 = p1
         self.p2 = p2
         self.isEnd = False
@@ -12,12 +14,12 @@ class State:
 
     # get unique hash of current board state
     def getHash(self):
-        self.boardHash = str(self.board.reshape(BOARD_COLS * BOARD_ROWS))
+        self.boardHash = str(self.board.reshape(Config.BOARD_COLS * Config.BOARD_ROWS))
         return self.boardHash
 
     def winner(self):
         # row
-        for i in range(BOARD_ROWS):
+        for i in range(Config.BOARD_ROWS):
             if sum(self.board[i, :]) == 3:
                 self.isEnd = True
                 return 1
@@ -25,7 +27,7 @@ class State:
                 self.isEnd = True
                 return -1
         # col
-        for i in range(BOARD_COLS):
+        for i in range(Config.BOARD_COLS):
             if sum(self.board[:, i]) == 3:
                 self.isEnd = True
                 return 1
@@ -33,8 +35,8 @@ class State:
                 self.isEnd = True
                 return -1
         # diagonal
-        diag_sum1 = sum([self.board[i, i] for i in range(BOARD_COLS)])
-        diag_sum2 = sum([self.board[i, BOARD_COLS - i - 1] for i in range(BOARD_COLS)])
+        diag_sum1 = sum([self.board[i, i] for i in range(Config.BOARD_COLS)])
+        diag_sum2 = sum([self.board[i, Config.BOARD_COLS - i - 1] for i in range(Config.BOARD_COLS)])
         diag_sum = max(abs(diag_sum1), abs(diag_sum2))
         if diag_sum == 3:
             self.isEnd = True
@@ -54,8 +56,8 @@ class State:
 
     def availablePositions(self):
         positions = []
-        for i in range(BOARD_ROWS):
-            for j in range(BOARD_COLS):
+        for i in range(Config.BOARD_ROWS):
+            for j in range(Config.BOARD_COLS):
                 if self.board[i, j] == 0:
                     positions.append((i, j))  # need to be tuple
         return positions
@@ -81,7 +83,7 @@ class State:
 
     # board reset
     def reset(self):
-        self.board = np.zeros((BOARD_ROWS, BOARD_COLS))
+        self.board = np.zeros((Config.BOARD_ROWS, Config.BOARD_COLS),dtype=int)
         self.boardHash = None
         self.isEnd = False
         self.playerSymbol = 1
@@ -127,7 +129,7 @@ class State:
                         self.p2.reset()
                         self.reset()
                         break
-    # play with human
+    # play p1 Computer with p2 human, Computer fängt an
     def play2(self):
         while not self.isEnd:
             # Player 1
@@ -161,13 +163,48 @@ class State:
                         print("tie!")
                     self.reset()
                     break
+    # play p1 Computer with p2 human, Human fängt an
+    def play3(self):
+        self.showBoard()
+        while not self.isEnd:
+            # Player 2
+            positions = self.availablePositions()
+            p2_action = self.p2.chooseAction(positions)
+            # take action and upate board state
+            self.updateState(p2_action)
+            self.showBoard()
+            # check board status if it is end
+            win = self.winner()
+            if win is not None:
+                if win == 1:
+                    print(self.p2.name, "wins!")
+                else:
+                    print("tie!")
+                self.reset()
+                break
+
+            else:
+                # Player 1
+                positions = self.availablePositions()
+                p1_action = self.p1.chooseAction(positions, self.board, self.playerSymbol)
+
+                self.updateState(p1_action)
+                self.showBoard()
+                win = self.winner()
+                if win is not None:
+                    if win == -1:
+                        print(self.p1.name, "wins!")
+                    else:
+                        print("tie!",win,self.p1.name)
+                    self.reset()
+                    break
 
     def showBoard(self):
         # p1: x  p2: o
-        for i in range(0, BOARD_ROWS):
+        for i in range(0, Config.BOARD_ROWS):
             print('-------------')
             out = '| '
-            for j in range(0, BOARD_COLS):
+            for j in range(0, Config.BOARD_COLS):
                 if self.board[i, j] == 1:
                     token = 'x'
                 if self.board[i, j] == -1:
@@ -177,3 +214,21 @@ class State:
                 out += token + ' | '
             print(out)
         print('-------------')
+    
+    def getBoardStr(self,board):
+        # p1: x  p2: o
+        board_str = ''
+        for i in range(0, Config.BOARD_ROWS):
+            board_str += '-------------\r\n'
+            out = '| '
+            for j in range(0, Config.BOARD_COLS):
+                if board[i, j] == 1:
+                    token = 'x'
+                if board[i, j] == -1:
+                    token = 'o'
+                if board[i, j] == 0:
+                    token = ' '
+                out += token + ' | '
+            board_str += out + '\r\n'
+        board_str += '-------------\r\n'
+        return board_str
