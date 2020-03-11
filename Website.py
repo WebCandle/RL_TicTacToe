@@ -23,5 +23,6 @@ api.add_resource(Route, '/')
 api.add_resource(Spiel, '/Spiel')
 api.add_resource(JS, '/tictactoe.js')
 api.add_resource(Style, '/style.css')
+#env.close()
 if __name__ == '__main__':
     app.run(debug=True)

@@ -16,3 +16,4 @@ p1.savePolicy(rounds)
 p2.savePolicy(rounds)
 
 
+#env.close()

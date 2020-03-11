@@ -3,59 +3,31 @@ import pickle
 import Config
 
 
-class Agent:
-    def __init__(self, name, exp_rate=0.3):
+class agent:
+    def __init__(self, name, symbol):
         self.name = name
-        self.states = []  # record all positions taken
-        self.lr = 0.2
-        self.exp_rate = exp_rate
-        self.decay_gamma = 0.9
-        self.states_value = {}  # state -> value
+        self.symbol = symbol
+        self.states = []  # record all states in current round
+        self.Q = {}  # dict of all learning state -> value
 
-    def getHash(self, board):
-        boardHash = str(board.reshape(Config.BOARD_COLS * Config.BOARD_ROWS))
-        return boardHash
-
-    def chooseAction(self, positions, current_board, symbol):
-        if np.random.uniform(0, 1) <= self.exp_rate:
-            # take random action
-            idx = np.random.choice(len(positions))
-            action = positions[idx]
-        else:
-            value_max = -999
-            for p in positions:
-                next_board = current_board.copy()
-                next_board[p] = symbol
-                next_boardHash = self.getHash(next_board)
-                value = 0 if self.states_value.get(next_boardHash) is None else self.states_value.get(next_boardHash)
-                # print("value", value)
-                if value >= value_max:
-                    value_max = value
-                    action = p
-        # print("{} takes action {}".format(self.name, action))
-        return action
-
-    # append a hash state
-    def addState(self, state):
-        self.states.append(state)
-
-    # at the end of game, backpropagate and update states value
-    def setReward(self, reward):
-        for st in reversed(self.states):
-            if self.states_value.get(st) is None:
-                self.states_value[st] = 0
-            self.states_value[st] += self.lr * (self.decay_gamma * reward - self.states_value[st])
-            reward = self.states_value[st]
+    # at the end of game, backpropagate and update states value Q[state] = reward
+    def set_reward(self, reward):
+        for state in reversed(self.states):
+            if self.Q.get(state) is None:
+                self.Q[state] = 0
+            gamma_discount_factor =  0.9
+            alpha_learning_rate = 0.2
+            self.Q[state] = self.Q[state] + alpha_learning_rate * ( reward * gamma_discount_factor - self.Q[state])
 
     def reset(self):
         self.states = []
 
     def savePolicy(self,rounds):
         fw = open('policies/policy_' + str(self.name)+'_'+str(rounds), 'wb')
-        pickle.dump(self.states_value, fw)
+        pickle.dump(self.Q, fw)
         fw.close()
 
     def loadPolicy(self, file):
         fr = open(file, 'rb')
-        self.states_value = pickle.load(fr)
+        self.Q = pickle.load(fr)
         fr.close()

@@ -11,3 +11,5 @@ Agent_X = hu.HumanPlayer("human")
 
 st = env.Environment(Agen_O, Agent_X )
 st.play3()
+
+#env.close()
