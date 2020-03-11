@@ -2,7 +2,7 @@ import numpy as np
 import pickle
 import Config
 
-class State:
+class Environment:
     def __init__(self, p1, p2):
         self.board = np.zeros((Config.BOARD_ROWS, Config.BOARD_COLS),dtype=int)
         self.p1 = p1
