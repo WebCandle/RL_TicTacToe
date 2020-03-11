@@ -50,7 +50,7 @@ class HumanPlayer:
         pass
 
     # at the end of game, backpropagate and update states value
-    def feedReward(self, reward):
+    def setReward(self, reward):
         pass
 
     def reset(self):

@@ -40,7 +40,7 @@ class Agent:
         self.states.append(state)
 
     # at the end of game, backpropagate and update states value
-    def feedReward(self, reward):
+    def setReward(self, reward):
         for st in reversed(self.states):
             if self.states_value.get(st) is None:
                 self.states_value[st] = 0

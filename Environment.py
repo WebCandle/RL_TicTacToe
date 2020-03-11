@@ -1,25 +1,24 @@
 import numpy as np
 import pickle
-import Config
 
 class Environment:
-    def __init__(self, p1, p2):
-        self.board = np.zeros((Config.BOARD_ROWS, Config.BOARD_COLS),dtype=int)
-        self.p1 = p1
-        self.p2 = p2
+    def __init__(self, Agent_O, Agent_X):
+        self.board = np.zeros((3, 3),dtype=int)
+        self.Agent_O = Agent_O
+        self.Agent_X = Agent_X
         self.isEnd = False
         self.boardHash = None
-        # init p1 plays first
+        # init Agent_O plays first
         self.playerSymbol = 1
 
     # get unique hash of current board state
-    def getHash(self):
-        self.boardHash = str(self.board.reshape(Config.BOARD_COLS * Config.BOARD_ROWS))
+    def getBoardHash(self):
+        self.boardHash = str(self.board.reshape(3 * 3))
         return self.boardHash
 
-    def winner(self):
+    def getWinner(self):
         # row
-        for i in range(Config.BOARD_ROWS):
+        for i in range(3):
             if sum(self.board[i, :]) == 3:
                 self.isEnd = True
                 return 1
@@ -27,7 +26,7 @@ class Environment:
                 self.isEnd = True
                 return -1
         # col
-        for i in range(Config.BOARD_COLS):
+        for i in range(3):
             if sum(self.board[:, i]) == 3:
                 self.isEnd = True
                 return 1
@@ -35,8 +34,8 @@ class Environment:
                 self.isEnd = True
                 return -1
         # diagonal
-        diag_sum1 = sum([self.board[i, i] for i in range(Config.BOARD_COLS)])
-        diag_sum2 = sum([self.board[i, Config.BOARD_COLS - i - 1] for i in range(Config.BOARD_COLS)])
+        diag_sum1 = sum([self.board[i, i] for i in range(3)])
+        diag_sum2 = sum([self.board[i, 3 - i - 1] for i in range(3)])
         diag_sum = max(abs(diag_sum1), abs(diag_sum2))
         if diag_sum == 3:
             self.isEnd = True
@@ -46,44 +45,44 @@ class Environment:
                 return -1
 
         # tie
-        # no available positions
-        if len(self.availablePositions()) == 0:
+        # no available actions
+        if len(self.availableActions()) == 0:
             self.isEnd = True
             return 0
         # not end
         self.isEnd = False
         return None
 
-    def availablePositions(self):
-        positions = []
-        for i in range(Config.BOARD_ROWS):
-            for j in range(Config.BOARD_COLS):
+    def availableActions(self):
+        actions = []
+        for i in range(3):
+            for j in range(3):
                 if self.board[i, j] == 0:
-                    positions.append((i, j))  # need to be tuple
-        return positions
+                    actions.append((i, j))  # need to be tuple
+        return actions
 
-    def updateState(self, position):
-        self.board[position] = self.playerSymbol
+    def updateState(self, action):
+        self.board[action] = self.playerSymbol
         # switch to another player
         self.playerSymbol = -1 if self.playerSymbol == 1 else 1
 
     # only when game ends
-    def giveReward(self):
-        result = self.winner()
+    def setReward(self):
+        result = self.getWinner()
         # backpropagate reward
         if result == 1:
-            self.p1.feedReward(1)
-            self.p2.feedReward(0)
+            self.Agent_O.setReward(1)
+            self.Agent_X.setReward(0)
         elif result == -1:
-            self.p1.feedReward(0)
-            self.p2.feedReward(1)
+            self.Agent_O.setReward(0)
+            self.Agent_X.setReward(1)
         else:
-            self.p1.feedReward(0.1)
-            self.p2.feedReward(0.5)
+            self.Agent_O.setReward(0.1)
+            self.Agent_X.setReward(0.5)
 
     # board reset
     def reset(self):
-        self.board = np.zeros((Config.BOARD_ROWS, Config.BOARD_COLS),dtype=int)
+        self.board = np.zeros((3, 3),dtype=int)
         self.boardHash = None
         self.isEnd = False
         self.playerSymbol = 1
@@ -94,55 +93,55 @@ class Environment:
                 print("Rounds {}".format(i))
             while not self.isEnd:
                 # Player 1
-                positions = self.availablePositions()
-                p1_action = self.p1.chooseAction(positions, self.board, self.playerSymbol)
+                actions = self.availableActions()
+                Agent_O_action = self.Agent_O.chooseAction(actions, self.board, self.playerSymbol)
                 # take action and upate board state
-                self.updateState(p1_action)
-                board_hash = self.getHash()
-                self.p1.addState(board_hash)
+                self.updateState(Agent_O_action)
+                board_hash = self.getBoardHash()
+                self.Agent_O.addState(board_hash)
                 # check board status if it is end
 
-                win = self.winner()
-                if win is not None:
-                    # self.showBoard()
-                    # ended with p1 either win or draw
-                    self.giveReward()
-                    self.p1.reset()
-                    self.p2.reset()
+                winner = self.getWinner()
+                if winner is not None:
+                    # self.Render()
+                    # ended with Agent_O either winner or draw
+                    self.setReward()
+                    self.Agent_O.reset()
+                    self.Agent_X.reset()
                     self.reset()
                     break
 
                 else:
                     # Player 2
-                    positions = self.availablePositions()
-                    p2_action = self.p2.chooseAction(positions, self.board, self.playerSymbol)
-                    self.updateState(p2_action)
-                    board_hash = self.getHash()
-                    self.p2.addState(board_hash)
+                    actions = self.availableActions()
+                    Agent_X_action = self.Agent_X.chooseAction(actions, self.board, self.playerSymbol)
+                    self.updateState(Agent_X_action)
+                    board_hash = self.getBoardHash()
+                    self.Agent_X.addState(board_hash)
 
-                    win = self.winner()
-                    if win is not None:
-                        # self.showBoard()
-                        # ended with p2 either win or draw
-                        self.giveReward()
-                        self.p1.reset()
-                        self.p2.reset()
+                    winner = self.getWinner()
+                    if winner is not None:
+                        # self.Render()
+                        # ended with Agent_X either winner or draw
+                        self.setReward()
+                        self.Agent_O.reset()
+                        self.Agent_X.reset()
                         self.reset()
                         break
-    # play p1 Computer with p2 human, Computer fängt an
+    # play Agent_O Computer with Agent_X human, Computer fängt an
     def play2(self):
         while not self.isEnd:
             # Player 1
-            positions = self.availablePositions()
-            p1_action = self.p1.chooseAction(positions, self.board, self.playerSymbol)
+            actions = self.availableActions()
+            Agent_O_action = self.Agent_O.chooseAction(actions, self.board, self.playerSymbol)
             # take action and upate board state
-            self.updateState(p1_action)
-            self.showBoard()
+            self.updateState(Agent_O_action)
+            self.Render()
             # check board status if it is end
-            win = self.winner()
-            if win is not None:
-                if win == 1:
-                    print(self.p1.name, "wins!")
+            winner = self.getWinner()
+            if winner is not None:
+                if winner == 1:
+                    print(self.Agent_O.name, "wins!")
                 else:
                     print("tie!")
                 self.reset()
@@ -150,34 +149,34 @@ class Environment:
 
             else:
                 # Player 2
-                positions = self.availablePositions()
-                p2_action = self.p2.chooseAction(positions)
+                actions = self.availableActions()
+                Agent_X_action = self.Agent_X.chooseAction(actions)
 
-                self.updateState(p2_action)
-                self.showBoard()
-                win = self.winner()
-                if win is not None:
-                    if win == -1:
-                        print(self.p2.name, "wins!")
+                self.updateState(Agent_X_action)
+                self.Render()
+                winner = self.getWinner()
+                if winner is not None:
+                    if winner == -1:
+                        print(self.Agent_X.name, "wins!")
                     else:
                         print("tie!")
                     self.reset()
                     break
-    # play p1 Computer with p2 human, Human fängt an
+    # play Agent_O Computer with Agent_X human, Human fängt an
     def play3(self):
-        self.showBoard()
+        self.Render()
         while not self.isEnd:
             # Player 2
-            positions = self.availablePositions()
-            p2_action = self.p2.chooseAction(positions)
+            actions = self.availableActions()
+            Agent_X_action = self.Agent_X.chooseAction(actions)
             # take action and upate board state
-            self.updateState(p2_action)
-            self.showBoard()
+            self.updateState(Agent_X_action)
+            self.Render()
             # check board status if it is end
-            win = self.winner()
-            if win is not None:
-                if win == 1:
-                    print(self.p2.name, "wins!")
+            winner = self.getWinner()
+            if winner is not None:
+                if winner == 1:
+                    print(self.Agent_X.name, "wins!")
                 else:
                     print("tie!")
                 self.reset()
@@ -185,26 +184,26 @@ class Environment:
 
             else:
                 # Player 1
-                positions = self.availablePositions()
-                p1_action = self.p1.chooseAction(positions, self.board, self.playerSymbol)
+                actions = self.availableActions()
+                Agent_O_action = self.Agent_O.chooseAction(actions, self.board, self.playerSymbol)
 
-                self.updateState(p1_action)
-                self.showBoard()
-                win = self.winner()
-                if win is not None:
-                    if win == -1:
-                        print(self.p1.name, "wins!")
+                self.updateState(Agent_O_action)
+                self.Render()
+                winner = self.getWinner()
+                if winner is not None:
+                    if winner == -1:
+                        print(self.Agent_O.name, "wins!")
                     else:
-                        print("tie!",win,self.p1.name)
+                        print("tie!",win,self.Agent_O.name)
                     self.reset()
                     break
 
-    def showBoard(self):
-        # p1: x  p2: o
-        for i in range(0, Config.BOARD_ROWS):
+    def Render(self):
+        # Agent_O: x  Agent_X: o
+        for i in range(0, 3):
             print('-------------')
             out = '| '
-            for j in range(0, Config.BOARD_COLS):
+            for j in range(0, 3):
                 if self.board[i, j] == 1:
                     token = 'x'
                 if self.board[i, j] == -1:
@@ -214,21 +213,3 @@ class Environment:
                 out += token + ' | '
             print(out)
         print('-------------')
-    
-    def getBoardStr(self,board):
-        # p1: x  p2: o
-        board_str = ''
-        for i in range(0, Config.BOARD_ROWS):
-            board_str += '-------------\r\n'
-            out = '| '
-            for j in range(0, Config.BOARD_COLS):
-                if board[i, j] == 1:
-                    token = 'x'
-                if board[i, j] == -1:
-                    token = 'o'
-                if board[i, j] == 0:
-                    token = ' '
-                out += token + ' | '
-            board_str += out + '\r\n'
-        board_str += '-------------\r\n'
-        return board_str
