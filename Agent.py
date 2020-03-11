@@ -3,7 +3,7 @@ import pickle
 import Config
 
 
-class Player:
+class Agent:
     def __init__(self, name, exp_rate=0.3):
         self.name = name
         self.states = []  # record all positions taken
@@ -40,7 +40,7 @@ class Player:
         self.states.append(state)
 
     # at the end of game, backpropagate and update states value
-    def feedReward(self, reward):
+    def setReward(self, reward):
         for st in reversed(self.states):
             if self.states_value.get(st) is None:
                 self.states_value[st] = 0

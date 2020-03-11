@@ -1,14 +1,13 @@
-import State as sta
+import Environment as env
 import Player as ply
-import HumanPlayer as hu
 
 
 
 # play with human
-p1 = ply.Player("computer", exp_rate=0)
-p1.loadPolicy("policies/policy_p2_50000")
+Agent_O = ply.Player("computer", exp_rate=0)
+Agen_O.loadPolicy("policies/policy_p2_50000")
 
-p2 = hu.HumanPlayer("human")
+Agent_X = hu.HumanPlayer("human")
 
-st = sta.State(p1, p2)
+st = env.Environment(Agen_O, Agent_X )
 st.play3()
