@@ -3,7 +3,7 @@ import pickle
 import Config
 
 
-class Player:
+class Agent:
     def __init__(self, name, exp_rate=0.3):
         self.name = name
         self.states = []  # record all positions taken
