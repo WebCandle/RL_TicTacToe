@@ -1,5 +1,4 @@
 import numpy as np
-import pickle
 
 class environment:
     def __init__(self, agent_O, agent_X):
@@ -21,7 +20,7 @@ class environment:
 
         # for more developement
         # self.observation_space = [1,2,3,4,5,6,7,8,9] how manay action can the agen make by a state
-        self.exp_rate = 0.3
+
 
     def render(self):
         # agent_O: O  agent_X: X
@@ -41,7 +40,7 @@ class environment:
         self.board[action-1] = agent.symbol
         self.action_space.remove(action)
         self.state = self.get_state()
-        agent.states.append(self.state)
+        agent.steps.append(self.state)
         info = {}
         info['winner'] = self.get_winner()
         if info['winner'] == agent.symbol:
@@ -57,9 +56,6 @@ class environment:
             self.done = False
         return self.state, reward, self.done, info
     
-    def action_space_sample(self):
-        #retern random action
-        pass
 
     # environment reset
     def reset(self):
@@ -79,46 +75,30 @@ class environment:
             state += s
         return state
 
-    def choose_action(self, agent):
-        if np.random.uniform(0, 1) <= self.exp_rate:
-            # take random action
-            idx = np.random.choice(len(self.action_space))
-            action = self.action_space[idx]
-        else:
-            value_max = -999
-            for next_action in self.action_space:
-                next_board = self.board.copy()
-                next_board[next_action-1] = agent.symbol
-                next_state = self.get_state(next_board)
-                value = 0 if agent.Q.get(next_state) is None else agent.Q.get(next_state)
-                if value >= value_max:
-                    value_max = value
-                    action = next_action
-        return action
-
     def train(self, rounds=100):
         for i in range(rounds):
             if i % 1000 == 0:
                 print("Rounds {}".format(i))
             while not self.done:
                 # agent_O
-                action = self.choose_action(self.agent_O)
+                action = self.agent_O.choose_action(self.action_space, self.board)
                 state, reward, done, info = self.step(action,self.agent_O)
-                print(state,reward,done,info)
                 # ended with agent_O either winner or draw
                 if info['winner'] == self.agent_O.symbol:
                     # agent_O has won!
                     self.reset()
+                    #print(state,reward,done,info)
                     break
                 elif info['winner'] == 0:
                     # tie
                     self.reset()
                 else:
-                    # agent_x
-                    action = self.choose_action(self.agent_X)
+                    # agent_X
+                    action = self.agent_X.choose_action(self.action_space, self.board)
                     state, reward, done, info = self.step(action,self.agent_X)
                     if info['winner'] == self.agent_X.symbol:
                         self.reset()
+                        #print(state,reward,done,info)
                         break
                     elif info['winner'] == 0: #tie
                         self.reset()
@@ -210,37 +190,37 @@ class environment:
     #                     print("tie!")
     #                 self.reset()
     #                 break
-    # # play agent_O Computer with agent_X human, Human fängt an
-    # def play3(self):
-    #     self.render()
-    #     while not self.done:
-    #         # Player 2
-    #         agent_X_action = self.agent_X.choose_action(self.action_space)
-    #         self.step(agent_X_action,'X')
-    #         self.render()
-    #         # check board status if it is end
-    #         winner = self.get_winner()
-    #         if winner is not None:
-    #             if winner == 1:
-    #                 print(self.agent_X.name, "wins!")
-    #             else:
-    #                 print("tie!")
-    #             self.reset()
-    #             break
+    # Computer plays as agent_O with human player as agent_X, human plays first
+    def play(self):
+        self.render()
+        while not self.done:
+            # Player 2
+            agent_X_action = self.agent_X.choose_action(self.action_space)
+            self.step(agent_X_action,'X')
+            self.render()
+            # check board status if it is end
+            winner = self.get_winner()
+            if winner is not None:
+                if winner == 1:
+                    print(self.agent_X.name, "wins!")
+                else:
+                    print("tie!")
+                self.reset()
+                break
 
-    #         else:
-    #             # Player 1
-    #             agent_O_action = self.agent_O.choose_action(self.action_space, self.board, 'O')
+            else:
+                # Player 1
+                agent_O_action = self.agent_O.choose_action(self.action_space, self.board, 'O')
 
-    #             self.step(agent_O_action,'O')
-    #             self.render()
-    #             winner = self.get_winner()
-    #             if winner is not None:
-    #                 if winner == -1:
-    #                     print(self.agent_O.name, "wins!")
-    #                 else:
-    #                     print("tie!",winner,self.agent_O.name)
-    #                 self.reset()
-    #                 break
+                self.step(agent_O_action,'O')
+                self.render()
+                winner = self.get_winner()
+                if winner is not None:
+                    if winner == -1:
+                        print(self.agent_O.name, "wins!")
+                    else:
+                        print("tie!",winner,self.agent_O.name)
+                    self.reset()
+                    break
 
 
