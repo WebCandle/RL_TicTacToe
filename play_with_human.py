@@ -1,4 +1,4 @@
-import Environment as env
+import environment as env
 import Player as ply
 
 

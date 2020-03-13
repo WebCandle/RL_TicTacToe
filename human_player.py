@@ -1,6 +1,5 @@
 import numpy as np
 import pickle
-import Config
 
 class HumanPlayer:
     def __init__(self, name):

@@ -8,7 +8,7 @@ agent_o.load_policy()
 agent_x.load_policy()
 env = environment.environment(agent_o,agent_x)
 
-rounds = 9*8*7*6*5*4*3*2*1
+rounds = 9*8*7*6*5*4*3*2*1 * 100
 
 env.train(rounds)
 agent_o.save_policy()
