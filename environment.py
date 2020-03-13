@@ -192,35 +192,34 @@ class environment:
     #                 break
     # Computer plays as agent_O with human player as agent_X, human plays first
     def play(self):
-        self.render()
         while not self.done:
-            # Player 2
-            agent_X_action = self.agent_X.choose_action(self.action_space)
-            self.step(agent_X_action,'X')
+            # agent_O
+            action = self.agent_O.choose_action(self.action_space, self.board)
+            state, reward, done, info = self.step(action,self.agent_O)
             self.render()
-            # check board status if it is end
-            winner = self.get_winner()
-            if winner is not None:
-                if winner == 1:
-                    print(self.agent_X.name, "wins!")
-                else:
-                    print("tie!")
+            # ended with agent_O either winner or draw
+            if info['winner'] == self.agent_O.symbol:
+                # agent_O has won!
+                print(self.agent_O.symbol+' won!')
+                print(state,reward,done,info)
                 self.reset()
                 break
-
+            elif info['winner'] == 0:
+                # tie
+                print('Draw!')
+                self.reset()
             else:
-                # Player 1
-                agent_O_action = self.agent_O.choose_action(self.action_space, self.board, 'O')
-
-                self.step(agent_O_action,'O')
+                # agent_X
+                action = self.agent_X.choose_action(self.action_space, self.board)
+                state, reward, done, info = self.step(action,self.agent_X)
                 self.render()
-                winner = self.get_winner()
-                if winner is not None:
-                    if winner == -1:
-                        print(self.agent_O.name, "wins!")
-                    else:
-                        print("tie!",winner,self.agent_O.name)
+                if info['winner'] == self.agent_X.symbol:
                     self.reset()
+                    #print(state,reward,done,info)
                     break
+                elif info['winner'] == 0:
+                    #tie
+                    print('Draw!')
+                    self.reset()
 
 

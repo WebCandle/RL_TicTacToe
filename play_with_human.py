@@ -1,15 +1,11 @@
-import environment as env
-import Player as ply
+from environment import environment
+from agent import agent
+from player import player
 
 
-
-# play with human
-Agent_O = ply.Player("computer", exp_rate=0)
-Agen_O.loadPolicy("policies/policy_p2_50000")
-
-Agent_X = hu.HumanPlayer("human")
-
-st = env.Environment(Agen_O, Agent_X )
-st.play3()
-
-#env.close()
+# agent plays with human player
+agent_o = agent('agent_o','O')
+player_x = player('player_maher_x','X')
+env = environment(agent_o, player_x)
+env.play()
+env.close()

@@ -8,7 +8,7 @@ class agent:
         self.symbol = symbol
         self.steps = []  # record all board states in current round
         self.Q = {}  # dict of all learning state -> value
-        self.exp_rate = exp_rate
+        self.exp_rate = exp_rate # 0.3 means that 30 % of actions will be randomly
         self.gamma_discount_factor =  gamma_discount_factor
         self.alpha_learning_rate = alpha_learning_rate
 
