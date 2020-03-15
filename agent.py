@@ -1,6 +1,6 @@
 import numpy as np
 import json
-
+import os
 
 class agent:
     def __init__(self, name, symbol, gamma_discount_factor=0.9, alpha_learning_rate=0.2, exp_rate= 0.3):
@@ -67,7 +67,9 @@ class agent:
         file_write.close()
 
     def load_policy(self):
-        file_read = open('policy/' + str(self.name) + '.json', 'r')
-        content = file_read.read()
-        self.Q = json.loads(content)
-        file_read.close()
+        file_name = 'policy/' + str(self.name) + '.json'
+        if os.path.isfile(file_name):
+            file_read = open(file_name, 'r')
+            content = file_read.read()
+            self.Q = json.loads(content)
+            file_read.close()
